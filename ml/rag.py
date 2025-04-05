@@ -2,7 +2,10 @@ import os
 import pandas as pd
 import json
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import List, Optional, Dict, Any, Union
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from langchain.chains.question_answering import load_qa_chain
@@ -10,9 +13,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmb
 from langchain.docstore.document import Document
 import warnings
 import requests
+import uvicorn
 
 # Load environment variables and suppress warnings
-
 warnings.filterwarnings("ignore")
 gemini_api_key = "AIzaSyB12_mkVK_TxKKgZASe0ov0jeurJ3nuKf0"
 
@@ -327,46 +330,52 @@ def rag_search(query):
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
     
     response = chain(
-    {"input_documents": docs, "context": combined_context, "question": query},
-    return_only_outputs=True
-)
-
+        {"input_documents": docs, "context": combined_context, "question": query},
+        return_only_outputs=True
+    )
     
     return response["output_text"]
 
-# Flask application
-app = Flask(__name__)
+# Define Pydantic models for request and response validation
+class QuestionRequest(BaseModel):
+    question: str
 
-@app.route("/ask", methods=["POST"])
-def ask():
+class QuestionResponse(BaseModel):
+    question: str
+    answer: str
+
+class ProcessResponse(BaseModel):
+    row_number: str
+    description: str
+    severity_score: str
+
+# FastAPI application
+app = FastAPI()
+
+@app.post("/ask", response_model=QuestionResponse)
+async def ask(request: QuestionRequest):
     """API endpoint to ask questions about transaction data"""
     try:
-        # Get request data
-        data = request.get_json()
-        question = data.get("question", "")
+        question = request.question
         
         if not question:
-            return jsonify({"error": "No question provided"}), 400
+            raise HTTPException(status_code=400, detail="No question provided")
         
         # Perform RAG search
         answer = rag_search(question)
         
-        return jsonify({
+        return {
             "question": question,
             "answer": answer
-        }), 200
+        }
         
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-    
-    
-    
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.route("/process", methods=["POST"])
-def process():
+@app.post("/process", response_model=List[ProcessResponse])
+async def process():
     """API endpoint to process new transactions"""
     try:
         # Fetch data from external API
@@ -374,7 +383,7 @@ def process():
         response = requests.get(api_url)
 
         if response.status_code != 200:
-            return jsonify({'error': 'Failed to fetch data'}), 500
+            raise HTTPException(status_code=500, detail="Failed to fetch data")
 
         # Get the data from response
         data = response.json()
@@ -395,12 +404,12 @@ def process():
             })
         
         # Return the formatted results
-        return jsonify(formatted_results), 200
+        return formatted_results
         
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Main execution
 if __name__ == "__main__":
@@ -415,6 +424,6 @@ if __name__ == "__main__":
     # df.to_csv("enriched_transactions.csv", index=False)
     # print("Enriched transactions exported to CSV ✅")
     
-    # Start Flask app
-    print("Starting Flask server...")
-    app.run(debug=True)
+    # Start FastAPI app with Uvicorn
+    print("Starting FastAPI server...")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
