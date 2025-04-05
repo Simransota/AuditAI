@@ -153,8 +153,7 @@ Anomaly_Type:
 """
 
 QA_PROMPT_TEMPLATE = """
-You are a specialized banking and financial services assistant. Your primary role is to provide accurate, clear, and helpful information about banking principles, financial services, and forex trading.
-
+You are an expert anomaly detection and forensic analyst specialized in analyzing sales transaction data for fraud detection and anomaly classification.
 Context:
 {context}
 
@@ -162,14 +161,11 @@ Question:
 {question}
 
 Instructions:
-1. Respond with precise, factual information directly addressing the question.
-2. Use simple, accessible language while maintaining technical accuracy.
-3. If the exact answer isn't in the context, respond with "The information requested is not available in the provided context."
-4. For numerical data, present information in a structured format when appropriate.
-5. If the question is ambiguous, briefly note the ambiguity before answering the most likely interpretation.
-6. Do not speculate or provide information beyond what's in the context.
-7. If the question requests financial advice that would typically require personalized assessment, note the limitations of general information.
-
+	•	Analyze the provided context to detect any anomalies or unusual patterns.
+	•	Examine relationships between data points to understand underlying connections.
+	•	Address the question by providing a detailed explanation of any identified anomalies.
+	•	Clearly articulate the reasoning behind why these anomalies occur, considering factors such as data distributions, correlations, and external influences.
+	•	If applicable, suggest potential implications or actions to address the anomalies.
 Answer:
 """
 #abcd
@@ -319,7 +315,7 @@ def rag_search(query):
     vector_store = load_faiss_db()
     
     # Retrieve relevant documents
-    docs = vector_store.similarity_search(query, k=3)
+    docs = vector_store.similarity_search(query, k=5)
     
     # Extract context from documents
     combined_context = "\n\n---\n\n".join([doc.page_content for doc in docs])
@@ -330,7 +326,7 @@ def rag_search(query):
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
     
     response = chain(
-    {"input_documents": [], "context": combined_context, "question": query},
+    {"input_documents": docs, "context": combined_context, "question": query},
     return_only_outputs=True
 )
 

@@ -34,7 +34,7 @@ pip-log.txt
 wandb/
 runs/
 logs/
-models/
+ml/models/
 datasets/
 
 # Node - Frontend

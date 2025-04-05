@@ -1,16 +1,7 @@
-fastapi 
-uvicorn 
-pandas
 fastapi
 uvicorn[standard]
 APScheduler
-pandas
-numpy
 scikit-learn
 SQLAlchemy
 psycopg2-binary
 python-dotenv
-Flask
-langchain
-langchain-google-genai
-faiss-cpu
