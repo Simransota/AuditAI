@@ -93,3 +93,7 @@ instance/
 *.cache
 *.sqlite3
 *.db
+
+ml/datasets
+ml.__pycache__
+ml/venv
