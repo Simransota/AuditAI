@@ -1,28 +1,69 @@
 "use client"
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import { ResponsiveBar } from '@nivo/bar'
 
-// Sample data for the risk distribution chart
 const data = [
-  { name: "Critical", value: 42, color: "#ef4444" },
-  { name: "High", value: 98, color: "#f97316" },
-  { name: "Medium", value: 124, color: "#facc15" },
-  { name: "Low", value: 83, color: "#84cc16" },
+  {
+    risk: "Critical",
+    count: 12,
+    color: "hsl(0, 70%, 50%)"
+  },
+  {
+    risk: "High",
+    count: 25,
+    color: "hsl(30, 70%, 50%)"
+  },
+  {
+    risk: "Medium",
+    count: 38,
+    color: "hsl(60, 70%, 50%)"
+  },
+  {
+    risk: "Low",
+    count: 45,
+    color: "hsl(120, 70%, 50%)"
+  }
 ]
 
 export function RiskDistributionChart() {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie data={data} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value">
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.color} />
-          ))}
-        </Pie>
-        <Tooltip formatter={(value) => [`${value} anomalies`, "Count"]} />
-        <Legend />
-      </PieChart>
-    </ResponsiveContainer>
+    <ResponsiveBar
+      data={data}
+      keys={['count']}
+      indexBy="risk"
+      margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+      padding={0.3}
+      valueScale={{ type: 'linear' }}
+      indexScale={{ type: 'band', round: true }}
+      colors={{ scheme: 'red_yellow_green' }}
+      borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+      axisTop={null}
+      axisRight={null}
+      axisBottom={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'Risk Level',
+        legendPosition: 'middle',
+        legendOffset: 32
+      }}
+      axisLeft={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'Count',
+        legendPosition: 'middle',
+        legendOffset: -40
+      }}
+      labelSkipWidth={12}
+      labelSkipHeight={12}
+      labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+      role="application"
+      ariaLabel="Risk Distribution"
+      barAriaLabel={function(e) {
+        return e.id + ": " + e.formattedValue + " anomalies";
+      }}
+    />
   )
 }
 

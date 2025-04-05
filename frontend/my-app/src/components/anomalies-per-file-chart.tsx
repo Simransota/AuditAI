@@ -1,69 +1,76 @@
 "use client"
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import { ResponsiveBar } from '@nivo/bar'
 
 // Sample data for the anomalies per file chart
 const data = [
   {
-    name: "financial_report_q1.pdf",
-    critical: 2,
-    high: 5,
-    medium: 8,
-    low: 3,
+    file: "auth.js",
+    anomalies: 15,
+    color: "hsl(200, 70%, 50%)"
   },
   {
-    name: "employee_data.xlsx",
-    critical: 1,
-    high: 3,
-    medium: 4,
-    low: 2,
+    file: "api.js",
+    anomalies: 12,
+    color: "hsl(240, 70%, 50%)"
   },
   {
-    name: "server_config.json",
-    critical: 0,
-    high: 2,
-    medium: 5,
-    low: 4,
+    file: "database.js",
+    anomalies: 10,
+    color: "hsl(280, 70%, 50%)"
   },
   {
-    name: "customer_database.sql",
-    critical: 3,
-    high: 4,
-    medium: 2,
-    low: 1,
+    file: "users.js",
+    anomalies: 8,
+    color: "hsl(320, 70%, 50%)"
   },
   {
-    name: "api_credentials.env",
-    critical: 4,
-    high: 2,
-    medium: 1,
-    low: 0,
-  },
+    file: "config.js",
+    anomalies: 5,
+    color: "hsl(360, 70%, 50%)"
+  }
 ]
 
 export function AnomaliesPerFileChart() {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart
-        data={data}
-        margin={{
-          top: 20,
-          right: 30,
-          left: 20,
-          bottom: 60,
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="critical" stackId="a" fill="#ef4444" name="Critical" />
-        <Bar dataKey="high" stackId="a" fill="#f97316" name="High" />
-        <Bar dataKey="medium" stackId="a" fill="#facc15" name="Medium" />
-        <Bar dataKey="low" stackId="a" fill="#84cc16" name="Low" />
-      </BarChart>
-    </ResponsiveContainer>
+    <ResponsiveBar
+      data={data}
+      keys={['anomalies']}
+      indexBy="file"
+      margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+      padding={0.3}
+      layout="horizontal"
+      valueScale={{ type: 'linear' }}
+      indexScale={{ type: 'band', round: true }}
+      colors={{ scheme: 'purple_blue' }}
+      borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+      axisTop={null}
+      axisRight={null}
+      axisBottom={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'Number of Anomalies',
+        legendPosition: 'middle',
+        legendOffset: 32
+      }}
+      axisLeft={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'File',
+        legendPosition: 'middle',
+        legendOffset: -40
+      }}
+      labelSkipWidth={12}
+      labelSkipHeight={12}
+      labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+      role="application"
+      ariaLabel="Anomalies per File"
+      barAriaLabel={function(e) {
+        return e.id + ": " + e.formattedValue + " anomalies in " + e.indexValue;
+      }}
+    />
   )
 }
 

@@ -21,6 +21,11 @@ const sidebarItems = [
     icon: LayoutDashboard,
   },
   {
+    title: "Sales Overview",
+    href: "/dashboard/sales-overview",
+    icon: Lightbulb,
+  },
+  {
     title: "Analytics",
     href: "/dashboard/analytics",
     icon: BarChart2,

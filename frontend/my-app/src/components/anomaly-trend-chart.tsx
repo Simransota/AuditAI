@@ -1,39 +1,84 @@
 "use client"
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { ResponsiveLine } from '@nivo/line'
 
-// Sample data for the trend chart
 const data = [
-  { date: "Jan 1", anomalies: 8 },
-  { date: "Jan 15", anomalies: 12 },
-  { date: "Feb 1", anomalies: 15 },
-  { date: "Feb 15", anomalies: 10 },
-  { date: "Mar 1", anomalies: 18 },
-  { date: "Mar 15", anomalies: 14 },
-  { date: "Apr 1", anomalies: 20 },
-  { date: "Apr 15", anomalies: 15 },
-  { date: "May 1", anomalies: 12 },
+  {
+    id: "anomalies",
+    data: [
+      { x: "Jan", y: 45 },
+      { x: "Feb", y: 38 },
+      { x: "Mar", y: 52 },
+      { x: "Apr", y: 42 },
+      { x: "May", y: 35 },
+      { x: "Jun", y: 48 }
+    ]
+  }
 ]
 
 export function AnomalyTrendChart() {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart
-        data={data}
-        margin={{
-          top: 5,
-          right: 30,
-          left: 20,
-          bottom: 5,
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-        <YAxis />
-        <Tooltip formatter={(value) => [`${value} anomalies`, "Count"]} labelFormatter={(value) => `Date: ${value}`} />
-        <Line type="monotone" dataKey="anomalies" stroke="#f97316" strokeWidth={2} activeDot={{ r: 8 }} />
-      </LineChart>
-    </ResponsiveContainer>
+    <ResponsiveLine
+      data={data}
+      margin={{ top: 20, right: 20, bottom: 50, left: 50 }}
+      xScale={{ type: 'point' }}
+      yScale={{ 
+        type: 'linear', 
+        min: 'auto', 
+        max: 'auto',
+      }}
+      curve="cardinal"
+      axisBottom={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'Month',
+        legendOffset: 36,
+        legendPosition: 'middle'
+      }}
+      axisLeft={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'Count',
+        legendOffset: -40,
+        legendPosition: 'middle'
+      }}
+      pointSize={10}
+      pointColor={{ theme: 'background' }}
+      pointBorderWidth={2}
+      pointBorderColor={{ from: 'serieColor' }}
+      pointLabelYOffset={-12}
+      enableArea={true}
+      areaOpacity={0.15}
+      useMesh={true}
+      legends={[
+        {
+          anchor: 'bottom',
+          direction: 'row',
+          justify: false,
+          translateX: 0,
+          translateY: 50,
+          itemsSpacing: 0,
+          itemDirection: 'left-to-right',
+          itemWidth: 80,
+          itemHeight: 20,
+          itemOpacity: 0.75,
+          symbolSize: 12,
+          symbolShape: 'circle',
+          symbolBorderColor: 'rgba(0, 0, 0, .5)',
+          effects: [
+            {
+              on: 'hover',
+              style: {
+                itemBackground: 'rgba(0, 0, 0, .03)',
+                itemOpacity: 1
+              }
+            }
+          ]
+        }
+      ]}
+    />
   )
 }
 

@@ -1,40 +1,83 @@
 "use client"
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
+import { ResponsivePie } from '@nivo/pie'
 
-// Sample data for the anomalies by type chart
 const data = [
-  { type: "Suspicious Content", count: 124, color: "#f97316" },
-  { type: "Unusual Access", count: 98, color: "#ef4444" },
-  { type: "Modification", count: 76, color: "#84cc16" },
-  { type: "Duplication", count: 32, color: "#3b82f6" },
-  { type: "Missing Data", count: 17, color: "#a855f7" },
+  {
+    id: "SQL Injection",
+    label: "SQL Injection",
+    value: 35,
+    color: "hsl(0, 70%, 50%)"
+  },
+  {
+    id: "XSS",
+    label: "Cross-Site Scripting",
+    value: 25,
+    color: "hsl(120, 70%, 50%)"
+  },
+  {
+    id: "Authentication",
+    label: "Authentication Issues",
+    value: 20,
+    color: "hsl(240, 70%, 50%)"
+  },
+  {
+    id: "Data Exposure",
+    label: "Sensitive Data Exposure",
+    value: 15,
+    color: "hsl(60, 70%, 50%)"
+  },
+  {
+    id: "Other",
+    label: "Other Vulnerabilities",
+    value: 5,
+    color: "hsl(180, 70%, 50%)"
+  }
 ]
 
 export function AnomaliesByTypeChart() {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart
-        data={data}
-        layout="vertical"
-        margin={{
-          top: 5,
-          right: 30,
-          left: 100,
-          bottom: 5,
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-        <XAxis type="number" />
-        <YAxis type="category" dataKey="type" tick={{ fontSize: 12 }} />
-        <Tooltip formatter={(value) => [`${value} anomalies`, "Count"]} labelFormatter={(value) => `Type: ${value}`} />
-        <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.color} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <ResponsivePie
+      data={data}
+      margin={{ top: 20, right: 80, bottom: 80, left: 80 }}
+      innerRadius={0.5}
+      padAngle={0.7}
+      cornerRadius={3}
+      activeOuterRadiusOffset={8}
+      borderWidth={1}
+      borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
+      arcLinkLabelsSkipAngle={10}
+      arcLinkLabelsTextColor="#333333"
+      arcLinkLabelsThickness={2}
+      arcLinkLabelsColor={{ from: 'color' }}
+      arcLabelsSkipAngle={10}
+      arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+      legends={[
+        {
+          anchor: 'bottom',
+          direction: 'row',
+          justify: false,
+          translateX: 0,
+          translateY: 56,
+          itemsSpacing: 0,
+          itemWidth: 100,
+          itemHeight: 18,
+          itemTextColor: '#999',
+          itemDirection: 'left-to-right',
+          itemOpacity: 1,
+          symbolSize: 18,
+          symbolShape: 'circle',
+          effects: [
+            {
+              on: 'hover',
+              style: {
+                itemTextColor: '#000'
+              }
+            }
+          ]
+        }
+      ]}
+    />
   )
 }
 

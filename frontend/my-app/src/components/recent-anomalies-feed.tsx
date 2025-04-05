@@ -18,22 +18,12 @@ const recentAnomalies = [
   },
   {
     id: "ANM-1232",
-    description: "Row 45 in file 'server_config.json' has security setting change",
+    description: "Row 45 in file 'server_config.csv' has security setting change",
     risk: "Medium",
     timestamp: "Today, 11:30 AM",
   },
-  {
-    id: "ANM-1231",
-    description: "Row 1205 in file 'customer_database.sql' shows unusual bulk data export",
-    risk: "High",
-    timestamp: "Today, 10:15 AM",
-  },
-  {
-    id: "ANM-1230",
-    description: "Row 12 in file 'api_credentials.env' has potential credential exposure",
-    risk: "Critical",
-    timestamp: "Yesterday, 4:55 PM",
-  },
+  
+ 
 ]
 
 export function RecentAnomaliesFeed() {
