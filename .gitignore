@@ -87,3 +87,9 @@ logs
 *.pid
 *.seed
 *.pid.lock 
+
+# FastAPI
+instance/
+*.cache
+*.sqlite3
+*.db
