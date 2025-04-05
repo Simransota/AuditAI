@@ -1,0 +1,5 @@
+python-dotenv
+Flask
+langchain
+langchain-google-genai
+faiss-cpu
