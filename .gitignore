@@ -1,0 +1,89 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.env
+venv/
+ENV/
+.venv
+pip-log.txt
+
+# ML specific
+*.h5
+*.pkl
+*.model
+.ipynb_checkpoints
+*.ckpt
+wandb/
+runs/
+logs/
+models/
+datasets/
+
+# Node - Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.next/
+out/
+build/
+.DS_Store
+*.pem
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.vercel
+.turbo
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependencies
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Testing
+coverage/
+.nyc_output/
+
+# Production build
+/build
+/dist
+
+# Misc
+.DS_Store
+*.log
+logs
+*.pid
+*.seed
+*.pid.lock 
