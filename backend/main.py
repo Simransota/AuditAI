@@ -14,4 +14,4 @@ app.add_middleware(
 )
 
 # Include router
-app.include_router(dashboard_routes.router)
+app.include_router(dashboard_routes.router) 
