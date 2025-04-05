@@ -97,3 +97,5 @@ instance/
 ml/datasets
 ml.__pycache__
 ml/venv
+ml/myenv
+ml/transaction_faiss_index

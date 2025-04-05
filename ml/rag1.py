@@ -172,7 +172,7 @@ Instructions:
 
 Answer:
 """
-
+#abcd
 # Function to get detailed description using Gemini
 def get_detailed_description(transaction_json):
     """Get detailed description for a transaction using Gemini"""
