@@ -10,7 +10,7 @@ async def get_anomaly_records():
     Endpoint to return anomaly records from anomaly_records.csv as JSON.
     """
     try:
-        df = pd.read_csv("datasets/anomaly_records.csv")
+        df = pd.read_csv("datasets/anomaly_records_og.csv")
     except FileNotFoundError:
         raise HTTPException(
             status_code=404, detail="The anomaly_records.csv file was not found."
