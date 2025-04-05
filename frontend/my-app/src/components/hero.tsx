@@ -6,7 +6,7 @@ import Link from "next/link";
 import { renderCanvas } from "@/components/ui/canvas"
 import { DIcons } from "dicons";
 
-import { Button } from "@/components/button";
+import { Button } from "../components/button";
 
 export function Hero() {
   useEffect(() => {
