@@ -2,6 +2,7 @@ from fastapi import APIRouter
 import pandas as pd
 from collections import Counter
 from collections import defaultdict
+from typing import List, Dict
 
 router = APIRouter()
 df = pd.read_csv("suspicious_cases_augmented.csv", parse_dates=["timestamp"])
@@ -40,7 +41,7 @@ def get_risk_distribution():
         output.append({"name": name, "value": int(count), "color": color})
     return output
 
-def anomaly_source_breakdown(filepath="anomaly_records.csv"):
+def anomaly_source_breakdown(filepath="anomaly_records_og.csv"):
     import pandas as pd
     from collections import defaultdict
 
@@ -97,7 +98,7 @@ def anomaly_source_breakdown(filepath="anomaly_records.csv"):
 def get_source_breakdown():
     return anomaly_source_breakdown()
 
-def load_cleaned_data(filepath="anomaly_records.csv"):
+def load_cleaned_data(filepath="anomaly_records_og.csv"):
     df = pd.read_csv(filepath)
 
     # Drop rows with NaNs
@@ -130,7 +131,7 @@ def get_modification_boxplot(group_by: str):
 
     return result
 
-anomaly_data = pd.read_csv("anomaly_records.csv")
+anomaly_data = pd.read_csv("anomaly_records_og.csv")
 
 @router.get("/payments")
 def get_payment_breakdown():
@@ -177,3 +178,32 @@ def get_payment_breakdown():
 
     return payment_summary
 
+@router.get("/sales-funnel", response_model=List[Dict])
+def sales_funnel_data():
+    funnel = []
+
+    # Step 1: Orders Placed
+    orders_placed = anomaly_data["Order_ID_z"].nunique()
+    funnel.append({"id": "Orders Placed", "value": orders_placed, "label": "Orders Placed"})
+
+    # Step 2: Orders Accepted
+    accepted = anomaly_data["Accepted_Time_z"].dropna().nunique()
+    funnel.append({"id": "Accepted", "value": accepted, "label": "Accepted"})
+
+    # Step 3: Orders Marked Ready
+    ready = anomaly_data["Mark_Ready_Time_z"].dropna().nunique()
+    funnel.append({"id": "Ready", "value": ready, "label": "Ready"})
+
+    # Step 4: Picked Up
+    picked = anomaly_data["Picked_up_Time_z"].dropna().nunique()
+    funnel.append({"id": "Picked Up", "value": picked, "label": "Picked Up"})
+
+    # Step 5: Delivered
+    delivered = anomaly_data["Delivered_Time_z"].dropna().nunique()
+    funnel.append({"id": "Delivered", "value": delivered, "label": "Delivered"})
+
+    # Step 6: Cancelled
+    cancelled = anomaly_data["Cancelled_Time_z"].dropna().nunique()
+    funnel.append({"id": "Cancelled", "value": cancelled, "label": "Cancelled"})
+
+    return funnel
