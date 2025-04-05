@@ -18,7 +18,7 @@ export function Hero() {
       <div className="animation-delay-8 animate-fadeIn mt-20 flex  flex-col items-center justify-center px-4 text-center md:mt-20">
         <div className="z-10 mb-6 mt-10 sm:justify-center md:mb-4 md:mt-20">
           <div className="relative flex items-center whitespace-nowrap rounded-full border bg-popover px-3 py-1 text-xs leading-6  text-primary/60 ">
-            <DIcons.Shapes className="h-5 p-1" /> Introducing Dicons.
+            <DIcons.Shapes className="h-5 p-1" />  Introducing AuditAI — Smart Sales Anomaly Detection
             <a
               href="/products/dicons"
               rel="noreferrer"
@@ -53,7 +53,7 @@ export function Hero() {
                   strokeWidth={4}
                   className="text-ali absolute -bottom-5 -right-5 h-10 w-10"
                 />
-                Your complete platform for the Design.
+                Audit. Analyze. Act.
               </h1>
               <div className="flex items-center justify-center gap-1">
                 <span className="relative flex h-3 w-3 items-center justify-center">
@@ -66,18 +66,17 @@ export function Hero() {
           </div>
 
           <h1 className="mt-8 text-2xl md:text-2xl">
-            Welcome to my creative playground! I&#39;m{" "}
+          Upload sales data, detect risks, and make confident decisions. I&#39;m{" "}
             <span className="text-ali font-bold">Ali </span>
           </h1>
 
           <p className="md:text-md mx-auto mb-16 mt-2 max-w-2xl px-6 text-sm text-primary/60 sm:px-6 md:max-w-4xl md:px-20 lg:text-lg">
-            I craft enchanting visuals for brands, and conjure design resources
-            to empower others.
+          Our AI-powered platform identifies hidden inconsistencies, unauthorized overrides, and risk patterns in structured sales data using Retrieval-Augmented Generation (RAG). Stay compliant and ahead of fraud.
           </p>
           <div className="flex justify-center gap-2">
             <Link href={"/dashboard"}>
               <Button variant="default" size="lg">
-                Start Project
+                Start Analyzing
               </Button>
             </Link>
             <Link href={"https://cal.com/aliimam/designali"} target="_blank">
