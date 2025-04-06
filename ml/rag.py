@@ -1,161 +1,76 @@
 import os
-import pandas as pd
 import json
-from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any, Union
+import logging
+from flask import Flask, request, jsonify
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from langchain.chains.question_answering import load_qa_chain
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain.docstore.document import Document
 import warnings
-import requests
-import uvicorn
 
-# Load environment variables and suppress warnings
+# Set up basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Suppress warnings
 warnings.filterwarnings("ignore")
-gemini_api_key = "AIzaSyB12_mkVK_TxKKgZASe0ov0jeurJ3nuKf0"
 
-# Initialize Google Generative AI Embeddings
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/embedding-001", 
-    google_api_key=gemini_api_key
-)
+# API key
+gemini_api_key = "AIzaSyB12_mkVK_TxKKgZASe0ov0jeurJ3nuKf0"
 
 # Constants
 FAISS_INDEX_PATH = "transaction_faiss_index"
 
-# Sample transaction data
-json_data = [
-    {
-        "Price": 450,
-        "Qty_": 10,
-        "Sub_Total": 4500,
-        "Discount": 1500,
-        "Tax": 225,
-        "Final_Total": 3225,
-        "Non_Taxable": 0,
-        "CGST_Rate": 2.5,
-        "CGST_Amount": 112.5,
-        "SGST_Rate": 2.5,
-        "SGST_Amount": 112.5,
-        "VAT_Rate": 0,
-        "VAT_Amount": 0,
-        "Service_Charge_Rate": 0,
-        "Service_Charge_Amount": 0,
-        "amount_from": "Wallet",
-        "amount_to": "Restaurant",
-        "modified_by": "AdminUser12",
-        "modify_comment": "High discount applied due to festive offer",
-        "electron_pos": "POS_03",
-        "Payment_Type": "Online",
-        "Order_Type": "Delivery",
-        "Area": "Mumbai",
-        "Status": "Completed",
-        "Server_Name": "Ravi",
-        "Assign_To": "DeliveryPartnerX",
-        "Aggregator_Discount_z": 1000,
-        "Outlet_Discount_z": 500,
-        "Aggregator_Discount_s": 0,
-        "Outlet_Discount_s": 0,
-        "Covers": 2,
-        "Timestamp": "2025-04-05T12:30:00",
-        "Invoice_No_": "INV123456",
-        "Name": "John Doe",
-        "bill_no": "BILL987654",
-        "Zomato_delivery_time": 45,
-        "Swiggy_delivery_time": 40,
-        "assigned_to": "DeliveryPartnerX",
-        "severity": "High",
-    },
-    # Add more transactions here as needed
-]
+# Function to load JSON data from file
+def load_json_data(file_path):
+    """Load transaction data from a JSON file."""
+    try:
+        if not os.path.exists(file_path):
+            logger.error(f"File not found: {file_path}")
+            return []
+            
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+            logger.info(f"Successfully loaded {len(data)} transactions from {file_path}")
+            return data
+    except json.JSONDecodeError:
+        logger.error(f"Invalid JSON format in file: {file_path}")
+        return []
+    except Exception as e:
+        logger.error(f"Error loading data from {file_path}: {str(e)}")
+        return []
 
-# Prompt templates for Gemini models
-DETAILED_DESCRIPTION_PROMPT = """
-You are an expert anomaly detection and forensic analyst specialized in analyzing sales transaction data for fraud detection and anomaly classification.
+# Load your JSON data
+json_data = load_json_data("datasets/anomaly_analysis_output.json")
 
-Given the following transaction record:
+# Fallback to sample data if file loading fails
+if not json_data:
+    logger.warning("Using sample data as fallback")
+    json_data = [
+        {
+            "row_id": 1,
+            "Invoice_No": "INV001",
+            "crux_summary": "Unusually high discount ratio of 33% that exceeds policy limits",
+            "severity": "High",
+            "Price": 450,
+            "Discount": 150,
+            "Final_Total": 300,
+            "Area": "Mumbai"
+        },
+        {
+            "row_id": 2,
+            "Invoice_No": "INV002", 
+            "crux_summary": "Tax calculation error resulting in 5% underpayment",
+            "severity": "Medium",
+            "Price": 200,
+            "Discount": 20,
+            "Final_Total": 180,
+            "Area": "Delhi"
+        }
+    ]
 
-{context}
-
-Your task is to carefully analyze this record and provide the following output:
-
-Detailed_Description:
-(Write a detailed descriptive explanation of why this record is anomalous — refer to specific fields and values)
-
-### Guidelines:
-- Be logical and analytical in your response.
-- Refer to the field names and their values from the given context.
-- Output must be structured and well explained.
-- Do not assume data not present in the context.
-
-Provide your output strictly in the following format:
-Detailed_Description:
-<Generated Detailed Explanation based on context>
-"""
-
-ONE_LINE_SUMMARY_PROMPT = """
-You are an expert anomaly detection and forensic analyst specialized in analyzing sales transaction data for fraud detection and anomaly classification.
-
-Given the following transaction record:
-
-{context}
-
-Your task is to carefully analyze this record and provide the following output:
-
-Crux_Summary:
-(Write a 1-2 line concise summary describing the anomaly)
-
-### Guidelines:
-- Be logical and analytical in your response.
-- Refer to the field names and their values from the given context.
-- Crux_Summary should be concise and business friendly.
-
-Provide your output strictly in the following format:
-Crux_Summary:
-<One or Two Line Summary capturing the main anomaly insight>
-"""
-
-ANOMALY_TYPE_PROMPT = """
-You are an expert anomaly detection and forensic analyst specialized in analyzing sales transaction data for fraud detection and anomaly classification.
-
-Given the following transaction record:
-
-{context}
-
-Your task is to carefully analyze this record and provide the following output:
-
-Anomaly_Type:
-(Generate relevant anomaly type(s) or tags — can be multiple, comma separated)
-
-### Anomaly Types to Consider (but not limited to):
-- Price Anomaly
-- Discount Fraud
-- Tax Manipulation
-- Data Entry Error
-- Revenue Leakage
-- Delivery Time Manipulation
-- Suspicious Manual Modification
-- Abnormal Payment Type Usage
-- Service Charge Anomaly
-- Invoice Calculation Error
-- Order Time Anomaly
-- Suspicious Discount Application
-
-### Guidelines:
-- Be logical and analytical in your response.
-- Refer to the field names and their values from the given context.
-- If multiple anomaly types exist, list them all.
-
-Provide your output strictly in the following format:
-Anomaly_Type:
-<Generated Anomaly Type(s)>
-"""
-
+# QA prompt template
 QA_PROMPT_TEMPLATE = """
 You are an expert anomaly detection and forensic analyst specialized in analyzing sales transaction data for fraud detection and anomaly classification.
 Context:
@@ -165,265 +80,160 @@ Question:
 {question}
 
 Instructions:
-	•	Analyze the provided context to detect any anomalies or unusual patterns.
-	•	Examine relationships between data points to understand underlying connections.
-	•	Address the question by providing a detailed explanation of any identified anomalies.
-	•	Clearly articulate the reasoning behind why these anomalies occur, considering factors such as data distributions, correlations, and external influences.
-	•	If applicable, suggest potential implications or actions to address the anomalies.
+    • Analyze the provided context to detect any anomalies or unusual patterns.
+    • Examine relationships between data points to understand underlying connections.
+    • Address the question by providing a detailed explanation of any identified anomalies.
+    • Clearly articulate the reasoning behind why these anomalies occur, considering factors such as data distributions, correlations, and external influences.
+    • If applicable, suggest potential implications or actions to address the anomalies.
 Answer:
 """
-#abcd
-# Function to get detailed description using Gemini
-def get_detailed_description(transaction_json):
-    """Get detailed description for a transaction using Gemini"""
-    model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=gemini_api_key)
-    prompt = PromptTemplate(template=DETAILED_DESCRIPTION_PROMPT, input_variables=["context"])
-    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
-    
-    # Convert transaction to string format for context
-    context = json.dumps(transaction_json, indent=2)
-    
-    # Get response
-    response = chain({"input_documents": [], "context": context}, return_only_outputs=True)
-    
-    # Extract just the description text (remove the "Detailed_Description:" prefix)
-    description_text = response["output_text"]
-    if "Detailed_Description:" in description_text:
-        description_text = description_text.split("Detailed_Description:", 1)[1].strip()
-    
-    return description_text
-
-# Function to get one-line summary using Gemini
-def get_one_line_summary(transaction_json):
-    """Get one-line summary for a transaction using Gemini"""
-    model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=gemini_api_key)
-    prompt = PromptTemplate(template=ONE_LINE_SUMMARY_PROMPT, input_variables=["context"])
-    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
-    
-    # Convert transaction to string format for context
-    context = json.dumps(transaction_json, indent=2)
-    
-    # Get response
-    response = chain({"input_documents": [], "context": context}, return_only_outputs=True)
-    
-    # Extract just the summary text (remove the "Crux_Summary:" prefix)
-    summary_text = response["output_text"]
-    if "Crux_Summary:" in summary_text:
-        summary_text = summary_text.split("Crux_Summary:", 1)[1].strip()
-    
-    return summary_text
-
-# Function to get anomaly types using Gemini
-def get_anomaly_types(transaction_json):
-    """Get anomaly types for a transaction using Gemini"""
-    model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=gemini_api_key)
-    prompt = PromptTemplate(template=ANOMALY_TYPE_PROMPT, input_variables=["context"])
-    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
-    
-    # Convert transaction to string format for context
-    context = json.dumps(transaction_json, indent=2)
-    
-    # Get response
-    response = chain({"input_documents": [], "context": context}, return_only_outputs=True)
-    
-    # Extract just the anomaly types (remove the "Anomaly_Type:" prefix)
-    anomaly_text = response["output_text"]
-    if "Anomaly_Type:" in anomaly_text:
-        anomaly_text = anomaly_text.split("Anomaly_Type:", 1)[1].strip()
-        
-    # Convert comma-separated string to list if needed
-    if isinstance(anomaly_text, str):
-        anomaly_list = [item.strip() for item in anomaly_text.split(",")]
-        return anomaly_list
-    
-    return anomaly_text
-
-# Process transactions with Gemini and prepare for FAISS
-def process_transactions_with_gemini(transactions):
-    """Process transactions with Gemini to get descriptions and anomaly types"""
-    enriched_transactions = []
-    
-    print("Processing transactions with Gemini...")
-    for i, transaction in enumerate(transactions):
-        print(f"Processing transaction {i+1}/{len(transactions)}...")
-        
-        # Create a copy of the transaction
-        enriched_transaction = transaction.copy()
-        
-        # Add row ID for reference
-        enriched_transaction['row_id'] = i
-        
-        # Get detailed description
-        enriched_transaction['detailed_description'] = get_detailed_description(transaction)
-        
-        # Get one-line summary
-        enriched_transaction['crux_summary'] = get_one_line_summary(transaction)
-        
-        # Get anomaly types
-        if 'anomaly_tags' not in transaction:  # Only generate if not already present
-            enriched_transaction['anomaly_tags'] = get_anomaly_types(transaction)
-        
-        enriched_transactions.append(enriched_transaction)
-    
-    return enriched_transactions
 
 # Build FAISS vector database
-def build_faiss_db(enriched_transactions):
-    """Build FAISS vector database from enriched transactions"""
-    documents = []
-    
-    print("Building FAISS vector database...")
-    for transaction in enriched_transactions:
-        # Create combined text for better search
-        combined_text = (
-            f"Transaction ID: {transaction['row_id']}\n"
-            f"Raw Data: {json.dumps(transaction)}\n"
-            f"Summary: {transaction.get('crux_summary', '')}\n"
-            f"Description: {transaction.get('detailed_description', '')}\n"
-            f"Anomaly Tags: {', '.join(transaction.get('anomaly_tags', []))}"
+def build_faiss_db():
+    """Build FAISS vector database from the global json_data"""
+    try:
+        # Initialize embeddings
+        embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/embedding-001", 
+            google_api_key=gemini_api_key,
         )
         
-        # Store the document with metadata
-        doc = Document(
-            page_content=combined_text,
-            metadata={
-                "row_id": transaction['row_id'],
-                "transaction": transaction
-            }
-        )
-        documents.append(doc)
-    
-    # Create and save the vector store
-    vector_store = FAISS.from_documents(documents, embeddings)
-    vector_store.save_local(FAISS_INDEX_PATH)
-    print(f"FAISS DB saved successfully to {FAISS_INDEX_PATH}!")
-    
-    return vector_store
-
-# Load FAISS vector database
-def load_faiss_db():
-    """Load FAISS vector database from disk"""
-    if os.path.exists(FAISS_INDEX_PATH):
-        vector_store = FAISS.load_local(FAISS_INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
-        print("FAISS DB loaded successfully!")
+        documents = []
+        logger.info("Building FAISS vector database...")
+        
+        for transaction in json_data:
+            # Create combined text for better search
+            combined_text = json.dumps(transaction)
+            
+            # Store the document with metadata
+            doc = Document(
+                page_content=combined_text,
+                metadata={"transaction": transaction}
+            )
+            documents.append(doc)
+        
+        # Create and save the vector store
+        vector_store = FAISS.from_documents(documents, embeddings)
+        vector_store.save_local(FAISS_INDEX_PATH)
+        logger.info(f"FAISS DB saved successfully to {FAISS_INDEX_PATH}!")
+        
         return vector_store
-    else:
-        print("FAISS DB not found. Building it...")
-        enriched_transactions = process_transactions_with_gemini(json_data)
-        return build_faiss_db(enriched_transactions)
+    except Exception as e:
+        logger.error(f"Error building FAISS DB: {str(e)}")
+        return None
+
+# Load or build FAISS vector database
+def get_vector_store():
+    """Load FAISS vector database from disk or build if not found"""
+    try:
+        # Initialize embeddings
+        embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/embedding-001", 
+            google_api_key=gemini_api_key,
+        )
+        
+        if os.path.exists(FAISS_INDEX_PATH):
+            vector_store = FAISS.load_local(FAISS_INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
+            logger.info("FAISS DB loaded successfully!")
+            return vector_store
+        else:
+            logger.info("FAISS DB not found. Building it...")
+            return build_faiss_db()
+    except Exception as e:
+        logger.error(f"Error loading or building FAISS DB: {str(e)}")
+        return None
 
 # RAG search function
 def rag_search(query):
     """Perform RAG search using the query"""
-    # Load or build FAISS DB
-    vector_store = load_faiss_db()
-    
-    # Retrieve relevant documents
-    docs = vector_store.similarity_search(query, k=5)
-    
-    # Extract context from documents
-    combined_context = "\n\n---\n\n".join([doc.page_content for doc in docs])
-    
-    # Generate response using QA chain
-    model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=gemini_api_key)
-    prompt = PromptTemplate(template=QA_PROMPT_TEMPLATE, input_variables=["context", "question"])
-    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
-    
-    response = chain(
-        {"input_documents": docs, "context": combined_context, "question": query},
-        return_only_outputs=True
-    )
-    
-    return response["output_text"]
+    try:
+        # Get vector store
+        vector_store = get_vector_store()
+        if not vector_store:
+            return "Error: Could not initialize search index."
+        
+        # Retrieve relevant documents
+        docs = vector_store.similarity_search(query, k=3)
+        
+        # Extract context from documents
+        combined_context = "\n\n---\n\n".join([doc.page_content for doc in docs])
+        
+        # Generate response using QA chain
+        model = ChatGoogleGenerativeAI(
+            model="gemini-1.5-flash", 
+            google_api_key=gemini_api_key,
+            temperature=0.3  # Lower temperature for more consistent responses
+        )
+        
+        prompt = PromptTemplate(template=QA_PROMPT_TEMPLATE, input_variables=["context", "question"])
+        chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
+        
+        response = chain(
+            {"input_documents": docs, "context": combined_context, "question": query},
+            return_only_outputs=True
+        )
+        
+        return response["output_text"]
+    except Exception as e:
+        logger.error(f"Error in RAG search: {str(e)}")
+        return f"Error processing your question: {str(e)}"
 
-# Define Pydantic models for request and response validation
-class QuestionRequest(BaseModel):
-    question: str
+# Initialize Flask application
+app = Flask(__name__)
 
-class QuestionResponse(BaseModel):
-    question: str
-    answer: str
+# Build the FAISS index at startup
+# @app.before_first_request
+# def initialize():
+#     build_faiss_db()
 
-class ProcessResponse(BaseModel):
-    row_number: str
-    description: str
-    severity_score: str
-
-# FastAPI application
-app = FastAPI()
-
-@app.post("/ask", response_model=QuestionResponse)
-async def ask(request: QuestionRequest):
+@app.route('/ask', methods=['POST'])
+def ask():
     """API endpoint to ask questions about transaction data"""
     try:
-        question = request.question
+        data = request.get_json()
         
-        if not question:
-            raise HTTPException(status_code=400, detail="No question provided")
+        if not data or 'question' not in data:
+            return jsonify({"error": "No question provided"}), 400
+        
+        question = data['question']
         
         # Perform RAG search
         answer = rag_search(question)
         
-        return {
+        return jsonify({
             "question": question,
             "answer": answer
-        }
+        })
         
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error processing question")
+        return jsonify({"error": str(e)}), 500
 
-@app.post("/process", response_model=List[ProcessResponse])
-async def process():
-    """API endpoint to process new transactions"""
+@app.route('/data', methods=['GET'])
+def get_data():
+    """API endpoint to get processed transaction data"""
     try:
-        # Fetch data from external API
-        api_url = 'https://api.example.com/data'
-        response = requests.get(api_url)
-
-        if response.status_code != 200:
-            raise HTTPException(status_code=500, detail="Failed to fetch data")
-
-        # Get the data from response
-        data = response.json()
-        
-        # Process transactions with Gemini
-        enriched_transactions = process_transactions_with_gemini(data)
-        
-        # Build or update FAISS DB (optional, remove if not needed)
-        vector_store = build_faiss_db(enriched_transactions)
-        
-        # Create a list of dictionaries for each row
+        # Format the results for the response
         formatted_results = []
-        for transaction in enriched_transactions:
+        for transaction in json_data:
             formatted_results.append({
-                "row_number": transaction.get("origin_id", ""),
-                "description": transaction.get("crux_summary", ""),
-                "severity_score": transaction.get("severity_label", "")
+                "row_number": str(transaction.get("Invoice_No", transaction.get("row_id", ""))),
+                "description": transaction.get("crux_summary", transaction.get("Crux_Summary", "")),
+                "severity_score": transaction.get("severity", transaction.get("Severity", ""))
             })
         
-        # Return the formatted results
-        return formatted_results
+        return jsonify(formatted_results)
         
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error retrieving data")
+        return jsonify({"error": str(e)}), 500
 
 # Main execution
 if __name__ == "__main__":
-    # Process sample data and build FAISS DB
-    print("Starting processing of sample data...")
-    enriched_transactions = process_transactions_with_gemini(json_data)
-    vector_store = build_faiss_db(enriched_transactions)
-    print(rag_search("What is the area ?"))
+    # Build FAISS DB at startup
+    logger.info("Building FAISS DB at startup...")
+    build_faiss_db()
     
-    # # Export enriched data to CSV
-    # df = pd.DataFrame(enriched_transactions)
-    # df.to_csv("enriched_transactions.csv", index=False)
-    # print("Enriched transactions exported to CSV ✅")
-    
-    # Start FastAPI app with Uvicorn
-    print("Starting FastAPI server...")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Start Flask app
+    logger.info("Starting Flask server...")
+    app.run(host="127.0.0.1", port=8000, debug=True)
