@@ -10,7 +10,7 @@ export function AuditReportView() {
   const [isPdfLoading, setIsPdfLoading] = useState(false)
   
   // PDF URL from public directory
-  const pdfUrl = "/Simran_Sota_Resume_Uber.pdf"
+  const pdfUrl = "/sales_audit_report.pdf"
 
   // Function to handle PDF download
   const handleDownloadPdf = () => {
@@ -155,8 +155,8 @@ export function AuditReportView() {
                     <p className="font-medium">Key Findings:</p>
                     <ul className="list-disc pl-5 mt-2 space-y-1">
                       <li>10 transactions with unusual discount amounts</li>
-                      <li>Total discount value: $2,450.75</li>
-                      <li>Most frequent offender: TechGiant Inc (4 instances)</li>
+                      <li>Total discount value: ₹2,450.75</li>
+                      {/* <li>Most frequent offender: TechGiant Inc (4 instances)</li> */}
                       <li>3 high severity, 5 medium severity, 2 low severity</li>
                     </ul>
                     <p className="mt-3 text-sm">
@@ -172,7 +172,7 @@ export function AuditReportView() {
                     <p className="font-medium">Key Findings:</p>
                     <ul className="list-disc pl-5 mt-2 space-y-1">
                       <li>7 transactions with tax calculation problems</li>
-                      <li>Estimated tax compliance risk: $875.50</li>
+                      <li>Estimated tax compliance risk: ₹875.50</li>
                       <li>Most common issue: Missing tax on taxable products (5 instances)</li>
                       <li>4 high severity, 3 medium severity</li>
                     </ul>
@@ -190,7 +190,7 @@ export function AuditReportView() {
                     <p className="font-medium">Key Findings:</p>
                     <ul className="list-disc pl-5 mt-2 space-y-1">
                       <li>5 potential duplicate transactions identified</li>
-                      <li>Total value of duplicates: $3,245.90</li>
+                      <li>Total value of duplicates: ₹3,245.90</li>
                       <li>Most concerning: 2 transactions for same customer on same day with different pricing</li>
                       <li>2 medium severity, 3 low severity</li>
                     </ul>
@@ -336,7 +336,7 @@ export function AuditReportView() {
 
               <div>
                 <p className="text-sm text-muted-foreground">Financial Impact</p>
-                <p className="text-2xl font-bold">$6,572.15</p>
+                <p className="text-2xl font-bold">₹6,572.15</p>
               </div>
 
               <div>

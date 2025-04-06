@@ -2,13 +2,45 @@
 
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ExcelView } from "../../components/excel-view"
+import  { ExcelView } from "../../components/excel-view"
 import { AuditReportView } from "../../components/audit-report-view"
-import { FileText, Table, Download, Filter } from "lucide-react"
+import { FileText, Table, Download, Filter, Mail, FileDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function ResultsPage() {
   const [view, setView] = useState<"excel" | "report">("excel")
+
+  const handleEmailExport = () => {
+    const subject = encodeURIComponent("Anomaly Detection Report")
+    const body = encodeURIComponent(`
+Dear Team,
+
+Please find attached the anomaly detection report from our latest analysis.
+
+Summary:
+- Total Records Analyzed: 4,250
+- Anomalies Detected: 25
+- Analysis Date: ${new Date().toLocaleDateString()}
+
+Key Findings:
+- Several transactions have been flagged for unusual discount patterns
+- Multiple instances of tax calculation discrepancies identified
+- Potential duplicate transactions detected
+
+For detailed information, please review the attached report.
+
+Best regards,
+Anomaly Detection System
+    `)
+    
+    window.location.href = `mailto:?subject=${subject}&body=${body}`
+  }
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -23,10 +55,24 @@ export default function ResultsPage() {
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={handleEmailExport}>
+                <Mail className="h-4 w-4 mr-2" />
+                Email Report
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <FileDown className="h-4 w-4 mr-2" />
+                Download Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

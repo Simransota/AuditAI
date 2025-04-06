@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from langchain.chains.question_answering import load_qa_chain
@@ -42,7 +43,7 @@ def load_json_data(file_path):
         return []
 
 # Load your JSON data
-json_data = load_json_data("datasets/anomaly_analysis_output.json")
+json_data = load_json_data("datasets/anomaly_analysis_output1.json")
 
 # Fallback to sample data if file loading fails
 if not json_data:
@@ -180,6 +181,7 @@ def rag_search(query):
 
 # Initialize Flask application
 app = Flask(__name__)
+CORS(app)
 
 # Build the FAISS index at startup
 # @app.before_first_request
@@ -216,11 +218,11 @@ def get_data():
         # Format the results for the response
         formatted_results = []
         for transaction in json_data:
-            formatted_results.append({
-                "row_number": str(transaction.get("Invoice_No", transaction.get("row_id", ""))),
-                "description": transaction.get("crux_summary", transaction.get("Crux_Summary", "")),
-                "severity_score": transaction.get("severity", transaction.get("Severity", ""))
-            })
+            # Get the Date value and ensure it's not None/empty
+            print(json_data)
+            date = transaction.get("Date")
+            if date:  # Only add if date exists
+                formatted_results.append(transaction)
         
         return jsonify(formatted_results)
         
