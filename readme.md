@@ -48,7 +48,7 @@ Manual or rule-based validation is error-prone, slow, and unscalable. Our system
   - Severity Classification (Multi-Class Classifier)
 - **RAG Pipeline**: Combines LLM with anomaly metadata to generate contextual reasoning
 - **MLOps**: Model feedback loop + retraining for continuous learning
-- **BI Tools**: Dashboard & report generation via Streamlit or Power BI
+
 
 ---
 
@@ -94,7 +94,7 @@ Manual or rule-based validation is error-prone, slow, and unscalable. Our system
 
 ## 🧑‍💼 Contact
 
-Developed by: [Your Team Name]  
-For demo or enterprise queries, reach out at: `your.email@example.com`
+Developed by: The Horcruxes
+
 
 ---
