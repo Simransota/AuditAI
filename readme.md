@@ -6,6 +6,13 @@ Traditional auditing struggles with detecting complex, context-rich anomalies in
 
 ---
 
+## 📸 Demo Vid
+
+https://github.com/user-attachments/assets/1abfe5e1-b6b3-4dc3-9217-92408faf25ab
+
+ 
+---
+
 ## 📊 Problem Statement
 
 Sales datasets often contain:
@@ -60,25 +67,6 @@ Manual or rule-based validation is error-prone, slow, and unscalable. Our system
 - Severity score for prioritization
 - Auto-generated audit reports
 - Multi-tier pricing model (Free, Premium Basic, Premium Pro)
-
----
-
-## 💸 Pricing Tiers
-
-| Tier | Target | Features |
-|------|--------|----------|
-| **Free** | Startups, Freelancers | Basic anomaly detection, limited uploads |
-| **Premium Basic** | SMBs | Unlimited uploads, advanced reasoning, reporting |
-| **Premium Pro** | Enterprises | API access, custom config, full-scale insights |
-
----
-
-## 📦 Future Scope
-
-- **Adaptive Learning (MLOps)**: Self-improving model via human-in-loop training
-- **Token-Efficient RAG**: Optimized LLM usage for faster, cost-effective querying
-- **Multi-layered Auditing**: Blend of rule-based + AI anomaly logic
-- **Enterprise API Integration**: Seamless plug-and-play into existing BI stacks
 
 ---
 
