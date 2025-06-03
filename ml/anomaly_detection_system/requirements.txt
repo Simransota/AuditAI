@@ -1,0 +1,10 @@
+# requirements.txt
+fastapi
+uvicorn
+pandas
+sqlalchemy
+psycopg2-binary
+scikit-learn
+mlflow
+numpy
+python-multipart

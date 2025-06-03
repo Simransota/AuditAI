@@ -1,0 +1,107 @@
+# Prompt templates for Gemini models
+DETAILED_DESCRIPTION_PROMPT = """
+You are an expert anomaly detection and forensic analyst specialized in analyzing sales transaction data for fraud detection and anomaly classification.
+
+Given the following transaction record:
+
+{context}
+
+Your task is to carefully analyze this record and provide the following output:
+
+Detailed_Description:
+(Write a detailed descriptive explanation of why this record is anomalous — refer to specific fields and values)
+
+### Guidelines:
+- Be logical and analytical in your response.
+- Refer to the field names and their values from the given context.
+- Output must be structured and well explained.
+- Do not assume data not present in the context.
+
+Provide your output strictly in the following format:
+Detailed_Description:
+<Generated Detailed Explanation based on context>
+"""
+
+ONE_LINE_SUMMARY_PROMPT = """
+You are an expert anomaly detection and forensic analyst specialized in analyzing sales transaction data for fraud detection and anomaly classification.
+
+Given the following transaction record:
+
+{context}
+
+Your task is to carefully analyze this record and provide the following output:
+
+Crux_Summary:
+(Write a 1-2 line concise summary describing the anomaly)
+
+### Guidelines:
+- Be logical and analytical in your response.
+- Refer to the field names and their values from the given context.
+- Crux_Summary should be concise and business friendly.
+
+Provide your output strictly in the following format:
+Crux_Summary:
+<One or Two Line Summary capturing the main anomaly insight>
+"""
+
+ANOMALY_TYPE_PROMPT = """
+You are an expert anomaly detection and forensic analyst specialized in analyzing sales transaction data for fraud detection and anomaly classification.
+
+Given the following transaction record:
+
+{context}
+
+Your task is to carefully analyze this record and provide the following output:
+
+Anomaly_Type:
+(Generate relevant anomaly type(s) or tags — can be multiple, comma separated)
+
+### Anomaly Types to Consider (but not limited to):
+- Price Anomaly
+- Discount Fraud
+- Tax Manipulation
+- Data Entry Error
+- Revenue Leakage
+- Delivery Time Manipulation
+- Suspicious Manual Modification
+- Abnormal Payment Type Usage
+- Service Charge Anomaly
+- Invoice Calculation Error
+- Order Time Anomaly
+- Suspicious Discount Application
+
+### Guidelines:
+- Be logical and analytical in your response.
+- Refer to the field names and their values from the given context.
+- If multiple anomaly types exist, list them all.
+
+Provide your output strictly in the following format:
+Anomaly_Type:
+<Generated Anomaly Type(s)>
+"""
+
+QA_PROMPT_TEMPLATE = """
+You are an expert anomaly detection and forensic analyst specialized in analyzing sales transaction data for fraud detection and anomaly classification.
+Context:
+{context}
+
+Question:
+{question}
+
+Instructions:
+	•	Analyze the provided context to detect any anomalies or unusual patterns.
+	•	Examine relationships between data points to understand underlying connections.
+	•	Address the question by providing a detailed explanation of any identified anomalies.
+	•	Clearly articulate the reasoning behind why these anomalies occur, considering factors such as data distributions, correlations, and external influences.
+	•	If applicable, suggest potential implications or actions to address the anomalies.
+	Key Metrics: Calculate preparation time (Accepted_Time - Mark_Ready_Time), delivery time (Picked_up_Time - Delivered_Time), and overall time (Received_Time - Delivered_Time) for both platforms.
+
+- Detect Anomalies: Compare Zomato (_z) and Swiggy (_s) times to identify delays or unusual patterns. Check for missing data in dining/parcel orders (_z and _s fields may be empty).
+
+- Analyze Patterns: Examine trends based on Order_Type, Delivery_status, and discounts (Aggregator_Discount, Outlet_Discount).
+
+- Reasoning: Discrepancies may result from platform processes, traffic, or operational inefficiencies. Missing data for dining orders is expected.
+
+- Implications: Suggest optimizations for preparation and delivery processes based on findings.
+Answer:
+"""
